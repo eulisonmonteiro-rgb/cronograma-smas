@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1565c0">
+<title>Cronograma das Unidades – SMAS Oriximiná</title>
+<style>
+:root {
+  --bg: #f5f7fa; --card: #ffffff; --tx: #1d2733; --mut: #6b7785;
+  --ac: #1565c0; --bd: #dde3ea; --err: #c62828; --ok: #2e7d32; --smas: #ef6c00;
+  --raio: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121820; --card: #1c2530; --tx: #e6ebf1; --mut: #97a3b1;
+    --ac: #64b5f6; --bd: #2d3945; --err: #ef9a9a; --ok: #81c784; --smas: #ffb74d;
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--tx);
+  padding: env(safe-area-inset-top, 0) max(12px, env(safe-area-inset-right)) 24px max(12px, env(safe-area-inset-left));
+  line-height: 1.35;
+}
+
+h1 { font-size: 1.15rem; margin: 0; }
+h2 { font-size: 1.05rem; margin: 0 0 8px; }
+.sub, .mut { color: var(--mut); font-size: .85rem; }
+.aviso { color: var(--err); font-size: .85rem; margin-top: 4px; }
+.erro { color: var(--err); font-size: .85rem; min-height: 1em; }
+.quem { color: var(--mut); font-size: .85rem; }
+
+/* ---------- Cabeçalho ---------- */
+.topo {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  justify-content: space-between; padding: 12px 0;
+}
+.acoes { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+/* ---------- Controles ---------- */
+button, select, input, textarea {
+  font: inherit; color: var(--tx); background: var(--card);
+  border: 1px solid var(--bd); border-radius: 8px; padding: 7px 11px;
+}
+button { cursor: pointer; min-height: 38px; }
+button:disabled { opacity: .5; cursor: default; }
+button.p { background: var(--ac); border-color: var(--ac); color: #fff; }
+button.d { color: var(--err); }
+input, select, textarea { width: 100%; }
+textarea { min-height: 140px; font-family: ui-monospace, monospace; font-size: .85rem; }
+.filtro { min-width: 160px; }
+
+/* ---------- Layout ---------- */
+.grade { display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px; }
+.card { background: var(--card); border: 1px solid var(--bd); border-radius: var(--raio); padding: 12px; }
+.nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+
+/* ---------- Calendário ---------- */
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal .h { text-align: center; font-size: .75rem; color: var(--mut); }
+.day {
+  min-height: 62px; border: 1px solid var(--bd); border-radius: 8px; padding: 4px;
+  cursor: pointer; font-size: .8rem; background: var(--card); overflow: hidden;
+}
+.day.s { background: color-mix(in srgb, var(--ac) 12%, var(--card)); }
+.day.t { outline: 2px solid var(--ac); }
+.dot { display: block; height: 6px; border-radius: 3px; margin-top: 3px; background: var(--ac); }
+.dot.smas { background: var(--smas); }
+
+/* ---------- Lista do dia ---------- */
+.item {
+  display: flex; gap: 8px; align-items: flex-start; cursor: pointer;
+  border: 1px solid var(--bd); border-left: 4px solid var(--ac);
+  border-radius: 8px; padding: 9px; margin: 6px 0; background: var(--card);
+}
+.item.smas { border-left-color: var(--smas); }
+.item img { width: 38px; height: 38px; object-fit: contain; border-radius: 6px; flex: none; }
+
+/* ---------- Diálogos ---------- */
+dialog {
+  border: none; border-radius: var(--raio); background: var(--card); color: var(--tx);
+  width: min(480px, 94vw); padding: 16px;
+}
+dialog::backdrop { background: rgba(0, 0, 0, .4); }
+#dlgBulk { width: min(640px, 94vw); }
+.form label { display: block; font-size: .85rem; color: var(--mut); margin: 8px 0 2px; }
+.form input, .form select { margin-top: 2px; }
+.linha { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.botoes { display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+.log { font-size: .85rem; max-height: 160px; overflow: auto; margin-top: 8px; }
+.ok { color: var(--ok); }
+.err { color: var(--err); }
+code { font-size: .8rem; }
+
+/* ---------- Celular e telas pequenas ---------- */
+@media (max-width: 800px) {
+  .grade { grid-template-columns: 1fr; }
+  .topo { flex-direction: column; align-items: stretch; }
+  .acoes { display: grid; grid-template-columns: 1fr 1fr; }
+  .acoes .quem { grid-column: 1 / -1; }
+  .acoes .filtro { grid-column: 1 / -1; min-width: 0; }
+  .acoes button, .acoes select { width: 100%; }
+  .day { min-height: 52px; font-size: .75rem; }
+  .cal { gap: 3px; }
+  .linha { grid-template-columns: 1fr; }
+  dialog { width: 94vw; max-height: 90vh; overflow: auto; }
+  input, select, textarea { font-size: 16px; }   /* evita zoom automático no iOS */
+}
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="titulo">
+    <h1>Cronograma das Unidades</h1>
+    <div class="sub">SMAS Oriximiná · bloqueio de conflitos ativo</div>
+    <div class="aviso" id="aviso"></div>
+  </div>
+  <div class="acoes">
+    <span class="quem" id="quem"></span>
+    <select id="filtro" class="filtro" onchange="render()"></select>
+    <button class="p" id="bNova" onclick="abrirForm(null)" disabled>+ Atividade</button>
+    <button id="bMassa" onclick="$('dlgBulk').showModal()" disabled>Em massa</button>
+    <button id="bLogo" onclick="$('dlgLogo').showModal()" disabled>Logo</button>
+    <button onclick="pdf()">PDF do mês</button>
+    <button id="bBkp" onclick="abrirBackup()" hidden>Backup</button>
+    <button id="bAuth" onclick="ME ? sair() : $('dlgLogin').showModal()">Entrar</button>
+  </div>
+</header>
+
+<main class="grade">
+  <section class="card calendario">
+    <div class="nav">
+      <button onclick="mudar(-1)" aria-label="Mês anterior">‹</button>
+      <b id="mes"></b>
+      <button onclick="mudar(1)" aria-label="Próximo mês">›</button>
+    </div>
+    <div class="cal" id="cal"></div>
+  </section>
+
+  <section class="card dia">
+    <h2 id="tituloDia"></h2>
+    <div id="lista"></div>
+  </section>
+</main>
+
+<!-- Login -->
+<dialog id="dlgLogin">
+  <form onsubmit="event.preventDefault();entrar()" class="form">
+    <h2>Entrar na unidade</h2>
+    <label>Unidade<select id="lu"></select></label>
+    <label>Senha<input type="password" id="lp" autocomplete="current-password" required></label>
+    <p class="mut">A senha é fornecida pela SMAS.</p>
+    <div class="erro" id="lmsg"></div>
+    <div class="botoes">
+      <button type="button" onclick="$('dlgLogin').close()">Fechar</button>
+      <button class="p">Entrar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Atividade -->
+<dialog id="dlg">
+  <form onsubmit="salvarForm(event)" class="form">
+    <h2 id="tDlg">Atividade</h2>
+    <input type="hidden" id="fid">
+    <div class="linha">
+      <label>Data<input type="date" id="fdata" required></label>
+      <label>Unidade<select id="fund"></select></label>
+    </div>
+    <div class="linha">
+      <label>Início<input type="time" id="fini" required></label>
+      <label>Fim<input type="time" id="ffim" required></label>
+    </div>
+    <label>Título<input id="ftit" required maxlength="120"></label>
+    <div class="linha">
+      <label>Tipo<select id="ftipo"></select></label>
+      <label>Responsável<input id="fresp" required maxlength="80"></label>
+    </div>
+    <div class="erro" id="fmsg"></div>
+    <div class="botoes">
+      <button type="button" id="fdel" class="d" onclick="excluir()">Excluir</button>
+      <button type="button" onclick="$('dlg').close()">Cancelar</button>
+      <button class="p">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Em massa -->
+<dialog id="dlgBulk">
+  <div class="form">
+    <h2>Colar atividades em massa</h2>
+    <p class="mut">Uma atividade por linha, com campos separados por ponto e vírgula:<br>
+    <code>data;início;fim;unidade;responsável;título;tipo</code><br>
+    Ex.: 03/11/2026;09:00;11:00;CREAS;Maria Souza;Roda de conversa;Oficina</p>
+    <textarea id="bulk" placeholder="Cole aqui as linhas"></textarea>
+    <div id="blog" class="log"></div>
+    <div class="botoes">
+      <button onclick="$('dlgBulk').close()">Fechar</button>
+      <button class="p" id="bImp" onclick="importarMassa()">Importar</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Logo -->
+<dialog id="dlgLogo">
+  <div class="form">
+    <h2>Logo da unidade</h2>
+    <label>Unidade<select id="lund"></select></label>
+    <input type="file" id="lfile" accept="image/*">
+    <p class="mut">Máximo 150 KB. Cada unidade envia somente a própria logo.</p>
+    <div class="botoes">
+      <button class="d" onclick="removerLogo()">Remover</button>
+      <button onclick="$('dlgLogo').close()">Fechar</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Backup (somente SMAS) -->
+<dialog id="dlgBkp">
+  <div class="form">
+    <h2>Backup (somente SMAS)</h2>
+    <button class="p" onclick="baixarBackup()">Baixar backup</button>
+    <hr>
+    <p class="mut">Para restaurar, escolha um arquivo de backup. Isso substitui <b>todo</b> o cronograma.</p>
+    <input type="file" id="rfile" accept="application/json">
+    <div class="erro" id="rmsg"></div>
+    <div class="botoes">
+      <button class="d" onclick="restaurar()">Restaurar</button>
+      <button onclick="$('dlgBkp').close()">Fechar</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+// =====================================================================
+// Configuração do site. Preencha com os dados do seu projeto Supabase
+// (Project Settings > API). A chave "anon" é pública por natureza:
+// quem protege os dados são as regras do banco (RLS), não esta chave.
+// NUNCA coloque aqui a chave "service_role".
+// =====================================================================
+window.CONFIG = {
+  SUPABASE_URL: "https://SEU-PROJETO.supabase.co",
+  SUPABASE_ANON_KEY: "SUA-CHAVE-ANON-PUBLICA",
+
+  ADMIN: "SMAS",
+  JANELA_DIAS: 3,            // deve ser o mesmo valor usado no schema.sql
+
+  TIPOS: [
+    "Reunião", "Oficina", "Capacitação", "Visita técnica",
+    "Evento", "Atendimento coletivo", "Campanha", "Outro"
+  ],
+
+  // Nome exibido da unidade e o e-mail do usuário de login correspondente.
+  // Os e-mails precisam ser os mesmos cadastrados no Supabase e no perfis.sql.
+  UNIDADES: [
+    { nome: "SMAS",                                 email: "smas@cronograma.local" },
+    { nome: "CRAS São Pedro",                       email: "cras-sao-pedro@cronograma.local" },
+    { nome: "CRAS Cidade Nova",                     email: "cras-cidade-nova@cronograma.local" },
+    { nome: "CRAS Ribeirinho",                      email: "cras-ribeirinho@cronograma.local" },
+    { nome: "UMAI - João e Maria",                  email: "umai-joao-e-maria@cronograma.local" },
+    { nome: "Coordenadoria da Mulher",              email: "coordenadoria-da-mulher@cronograma.local" },
+    { nome: "Casa de Passagem - Bom Samaritano",    email: "casa-de-passagem-bom-samaritano@cronograma.local" },
+    { nome: "Centro de Convivência Anita Valente",  email: "centro-de-convivencia-anita-valente@cronograma.local" },
+    { nome: "CREAS",                                email: "creas@cronograma.local" },
+    { nome: "CAD - Cadastro Único",                 email: "cad-cadastro-unico@cronograma.local" }
+  ]
+};
+
+</script>
+<script>
+// =====================================================================
+// Cronograma das Unidades – lógica do site
+// Os dados ficam no Supabase. As regras de bloqueio estão no banco
+// (supabase/schema.sql), então esta tela só mostra a mensagem de erro.
+// =====================================================================
+const C = window.CONFIG;
+const sb = window.supabase.createClient(C.SUPABASE_URL, C.SUPABASE_ANON_KEY);
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const key = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const fmtData = d => { const [y, m, dd] = d.split("-"); return `${dd}/${m}/${y}`; };
+const hora = t => String(t).slice(0, 5);
+const msgErro = e => e?.message || "Erro inesperado.";
+const aviso = t => { $("aviso").textContent = t; };
+const emailDa = nome => C.UNIDADES.find(u => u.nome === nome)?.email;
+
+let ME = null;                       // { unidade, admin }
+let S = { acts: [], logos: {} };     // dados em memória
+let cur = new Date(), sel = key(new Date()), canal = null;
+
+const podeAlterar = a => ME && (ME.admin || a.unidade === ME.unidade);
+
+// ---------- Sessão ----------
+async function iniciar() {
+  const { data } = await sb.auth.getUser();
+  const user = data?.user;
+  if (!user) {
+    ME = null; S = { acts: [], logos: {} }; render();
+    $("dlgLogin").showModal();
+    return;
+  }
+  const { data: perfil, error } = await sb.from("perfis").select("unidade, admin").eq("id", user.id).single();
+  if (error || !perfil) {
+    await sb.auth.signOut();
+    aviso("Este usuário não está vinculado a nenhuma unidade. Fale com a SMAS.");
+    $("dlgLogin").showModal();
+    return;
+  }
+  ME = { unidade: perfil.unidade, admin: perfil.admin };
+  aviso("");
+  await carregar();
+  assinar();
+  render();
+}
+
+async function entrar() {
+  $("lmsg").textContent = "";
+  const { error } = await sb.auth.signInWithPassword({ email: emailDa($("lu").value), password: $("lp").value });
+  if (error) { $("lmsg").textContent = "Senha incorreta."; return; }
+  $("lp").value = "";
+  $("dlgLogin").close();
+  await iniciar();
+}
+
+async function sair() {
+  await sb.auth.signOut();
+  if (canal) sb.removeChannel(canal);
+  canal = null;
+  await iniciar();
+}
+
+// ---------- Dados ----------
+async function carregar() {
+  const [a, l] = await Promise.all([
+    sb.from("atividades").select("*").order("data").order("ini"),
+    sb.from("logos").select("*")
+  ]);
+  if (a.error || l.error) { aviso("Erro ao carregar: " + msgErro(a.error || l.error)); return; }
+  S.acts = a.data.map(x => ({
+    id: x.id, data: x.data, ini: hora(x.ini), fim: hora(x.fim),
+    unidade: x.unidade, responsavel: x.responsavel, titulo: x.titulo, tipo: x.tipo
+  }));
+  S.logos = Object.fromEntries(l.data.map(x => [x.unidade, x.data_url]));
+  render();
+}
+
+// Tempo real: quando outra unidade muda algo, recarrega
+function assinar() {
+  if (canal) sb.removeChannel(canal);
+  canal = sb.channel("cronograma")
+    .on("postgres_changes", { event: "*", schema: "public", table: "atividades" }, () => carregar())
+    .on("postgres_changes", { event: "*", schema: "public", table: "logos" }, () => carregar())
+    .subscribe();
+}
+
+// ---------- Tela ----------
+function mudar(n) { cur.setMonth(cur.getMonth() + n); render(); }
+
+function card(a) {
+  const logo = S.logos[a.unidade] ? `<img src="${S.logos[a.unidade]}" alt="">` : "";
+  return `<div class="item ${a.unidade === C.ADMIN ? "smas" : ""}" onclick="editar('${a.id}')">${logo}
+    <div><b>${esc(a.ini)}–${esc(a.fim)} · ${esc(a.titulo)}</b>
+    <div class="mut">${esc(a.unidade)} · ${esc(a.tipo)}<br>Resp.: ${esc(a.responsavel)} · ${fmtData(a.data)}</div></div></div>`;
+}
+
+function render() {
+  const logado = !!ME;
+  $("quem").textContent = logado ? `${ME.unidade}${ME.admin ? " (admin)" : ""}` : "Não autenticado";
+  $("bAuth").textContent = logado ? "Sair" : "Entrar";
+  ["bNova", "bMassa", "bLogo"].forEach(id => $(id).disabled = !logado);
+  $("bBkp").hidden = !(logado && ME.admin);
+
+  const f = $("filtro").value;
+  const vis = S.acts.filter(a => !f || a.unidade === f);
+  const y = cur.getFullYear(), m = cur.getMonth();
+  $("mes").textContent = cur.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+
+  const cal = $("cal");
+  cal.innerHTML = "";
+  ["D", "S", "T", "Q", "Q", "S", "S"].forEach(x => cal.insertAdjacentHTML("beforeend", `<div class="h">${x}</div>`));
+  const first = new Date(y, m, 1).getDay(), total = new Date(y, m + 1, 0).getDate();
+  for (let i = 0; i < first; i++) cal.insertAdjacentHTML("beforeend", "<div></div>");
+  for (let d = 1; d <= total; d++) {
+    const k = `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const lst = vis.filter(a => a.data === k);
+    const el = document.createElement("div");
+    el.className = "day" + (lst.length ? " s" : "") + (k === sel ? " t" : "");
+    el.innerHTML = `<b>${d}</b>` +
+      lst.slice(0, 3).map(a => `<span class="dot ${a.unidade === C.ADMIN ? "smas" : ""}"></span>`).join("") +
+      (lst.length > 3 ? `<span class="mut">+${lst.length - 3}</span>` : "");
+    el.onclick = () => { sel = k; render(); };
+    cal.appendChild(el);
+  }
+
+  $("tituloDia").textContent = sel ? fmtData(sel) : "Selecione um dia";
+  const dia = vis.filter(a => a.data === sel).sort((a, b) => a.ini.localeCompare(b.ini));
+  $("lista").innerHTML = !logado
+    ? `<p class="mut">Entre com a senha da sua unidade para ver e lançar atividades.</p>`
+    : (dia.map(card).join("") || `<p class="mut">Nenhuma atividade neste dia.</p>`);
+}
+
+// ---------- Atividades ----------
+function abrirForm(a) {
+  if (!ME) return $("dlgLogin").showModal();
+  if (a && !podeAlterar(a)) return alert("Somente a unidade responsável (ou a SMAS) pode alterar esta atividade.");
+  $("tDlg").textContent = a ? "Editar atividade" : "Nova atividade";
+  $("fmsg").textContent = "";
+  $("fid").value = a ? a.id : "";
+  $("fdata").value = a ? a.data : (sel || key(new Date()));
+  $("fini").value = a ? a.ini : "09:00";
+  $("ffim").value = a ? a.fim : "10:00";
+  $("fund").value = a ? a.unidade : (ME.admin ? (($("filtro").value) || C.UNIDADES[0].nome) : ME.unidade);
+  $("fund").disabled = !ME.admin;
+  $("ftit").value = a ? a.titulo : "";
+  $("ftipo").value = a ? a.tipo : "Outro";
+  $("fresp").value = a ? a.responsavel : "";
+  $("fdel").hidden = !a;
+  $("dlg").showModal();
+}
+function editar(id) { abrirForm(S.acts.find(x => x.id === id)); }
+
+async function salvarForm(e) {
+  e.preventDefault();
+  $("fmsg").textContent = "";
+  const linha = {
+    id: $("fid").value || crypto.randomUUID(),
+    data: $("fdata").value,
+    ini: $("fini").value,
+    fim: $("ffim").value,
+    unidade: ME.admin ? $("fund").value : ME.unidade,
+    responsavel: $("fresp").value.trim(),
+    titulo: $("ftit").value.trim(),
+    tipo: $("ftipo").value
+  };
+  if (linha.fim <= linha.ini) return $("fmsg").textContent = "A hora final deve ser posterior à inicial.";
+  const { error } = await sb.from("atividades").upsert(linha);
+  if (error) return $("fmsg").textContent = msgErro(error);
+  $("dlg").close();
+  sel = linha.data;
+  cur = new Date(linha.data + "T12:00:00");
+  await carregar();
+}
+
+async function excluir() {
+  const id = $("fid").value;
+  if (!confirm("Excluir esta atividade?")) return;
+  const { error } = await sb.from("atividades").delete().eq("id", id);
+  if (error) return $("fmsg").textContent = msgErro(error);
+  $("dlg").close();
+  await carregar();
+}
+
+async function importarMassa() {
+  const linhas = $("bulk").value.split("\n").map(l => l.trim()).filter(Boolean);
+  if (!linhas.length) return;
+  $("bImp").disabled = true;
+  const log = [];
+  let ok = 0;
+  for (let i = 0; i < linhas.length; i++) {
+    const p = linhas[i].split(/[;\t]/).map(s => s.trim());
+    if (p.length < 6) { log.push(`<div class="err">Linha ${i + 1}: campos insuficientes.</div>`); continue; }
+    let [d, ini, fim, un, resp, tit, tipo = "Outro"] = p;
+    const m = d.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (m) d = `${m[3]}-${m[2]}-${m[1]}`;
+    if (!C.TIPOS.includes(tipo)) tipo = "Outro";
+    if (!ME.admin && un !== ME.unidade) {
+      log.push(`<div class="err">Linha ${i + 1}: só é possível lançar atividades de ${esc(ME.unidade)}.</div>`);
+      continue;
+    }
+    const { error } = await sb.from("atividades").insert({
+      id: crypto.randomUUID(), data: d, ini, fim, unidade: un, responsavel: resp, titulo: tit, tipo
+    });
+    if (error) log.push(`<div class="err">Linha ${i + 1}: ${esc(msgErro(error))}</div>`);
+    else { ok++; log.push(`<div class="ok">Linha ${i + 1}: adicionada (${esc(tit)})</div>`); }
+  }
+  $("blog").innerHTML = `<b>${ok} de ${linhas.length} atividades adicionadas</b>` + log.join("");
+  $("bImp").disabled = false;
+  await carregar();
+}
+
+// ---------- Logos ----------
+function lerArquivo(f) {
+  return new Promise((ok, err) => {
+    const r = new FileReader();
+    r.onload = () => ok(r.result);
+    r.onerror = err;
+    r.readAsDataURL(f);
+  });
+}
+
+$("lfile").onchange = async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const un = $("lund").value;
+  if (!ME.admin && un !== ME.unidade) { alert("Só é possível enviar a logo da própria unidade."); return; }
+  if (file.size > 150e3) { alert("Imagem acima de 150 KB."); return; }
+  const dataUrl = await lerArquivo(file);
+  const { error } = await sb.from("logos").upsert({ unidade: un, data_url: dataUrl });
+  if (error) alert(msgErro(error));
+  else { alert("Logo salva."); await carregar(); }
+  $("lfile").value = "";
+};
+
+async function removerLogo() {
+  const un = $("lund").value;
+  if (!ME.admin && un !== ME.unidade) return alert("Só é possível remover a logo da própria unidade.");
+  const { error } = await sb.from("logos").delete().eq("unidade", un);
+  if (error) alert(msgErro(error)); else await carregar();
+}
+
+// ---------- Backup (SMAS) ----------
+function baixar(blob, nome) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = nome;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+async function abrirBackup() {
+  if (!ME?.admin) return;
+  $("rmsg").textContent = "";
+  $("dlgBkp").showModal();
+}
+
+async function baixarBackup() {
+  const { data: logos, error } = await sb.from("logos").select("*");
+  if (error) return alert(msgErro(error));
+  const conteudo = { versao: 4, geradoEm: new Date().toISOString(), atividades: S.acts, logos };
+  baixar(new Blob([JSON.stringify(conteudo, null, 1)], { type: "application/json" }),
+    `cronograma-backup-${key(new Date())}.json`);
+}
+
+async function restaurar() {
+  if (!ME?.admin) return;
+  const file = $("rfile").files[0];
+  if (!file) return ($("rmsg").textContent = "Escolha um arquivo de backup.");
+  let d;
+  try { d = JSON.parse(await file.text()); }
+  catch { return ($("rmsg").textContent = "Arquivo inválido."); }
+  if (!Array.isArray(d.atividades)) return ($("rmsg").textContent = "Arquivo inválido.");
+  if (!confirm("Substituir TODO o cronograma pelo backup? Esta ação não pode ser desfeita.")) return;
+
+  const { error: e1 } = await sb.from("atividades").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  if (e1) return ($("rmsg").textContent = msgErro(e1));
+  for (const a of d.atividades) {
+    const { error } = await sb.from("atividades").insert({
+      id: a.id || crypto.randomUUID(), data: a.data, ini: a.ini, fim: a.fim,
+      unidade: a.unidade, responsavel: a.responsavel, titulo: a.titulo, tipo: a.tipo
+    });
+    if (error) return ($("rmsg").textContent = `Parou na atividade "${a.titulo}": ${msgErro(error)}`);
+  }
+  for (const [un, dataUrl] of Object.entries(d.logos || {})) {
+    if (typeof dataUrl === "string") await sb.from("logos").upsert({ unidade: un, data_url: dataUrl });
+  }
+  $("dlgBkp").close();
+  alert("Backup restaurado.");
+  await carregar();
+}
+
+// ---------- PDF do mês ----------
+function pdf() {
+  if (!window.jspdf) return alert("Biblioteca de PDF não carregou. Recarregue a página.");
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  const fil = $("filtro").value, y = cur.getFullYear(), m = cur.getMonth();
+  const W = 297, M = 10, cw = (W - 2 * M) / 7, top = 24, ch = (210 - top - 12) / 6;
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(14);
+  doc.text(`Cronograma das Unidades – ${cur.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}`, M, 14);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8);
+  doc.text(fil ? `Unidade: ${fil}` : "Todas as unidades", M, 19);
+  ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].forEach((n, i) => {
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.text(n, M + i * cw + 1.5, top - 2);
+  });
+
+  const first = new Date(y, m, 1).getDay(), total = new Date(y, m + 1, 0).getDate();
+  for (let d = 1; d <= total; d++) {
+    const idx = first + d - 1, r = Math.floor(idx / 7), c = idx % 7;
+    const x = M + c * cw, yy = top + r * ch;
+    doc.setDrawColor(180); doc.rect(x, yy, cw, ch);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(0);
+    doc.text(String(d), x + 1.5, yy + 4);
+    const k = `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const lst = S.acts.filter(a => a.data === k && (!fil || a.unidade === fil)).sort((a, b) => a.ini.localeCompare(b.ini));
+    doc.setFont("helvetica", "normal"); doc.setFontSize(6.2);
+    let ly = yy + 8;
+    lst.slice(0, 4).forEach(a => {
+      doc.splitTextToSize(`${a.ini} ${a.titulo} (${a.unidade}) – ${a.responsavel}`, cw - 3).slice(0, 2).forEach(l => {
+        if (ly < yy + ch - 1) { doc.text(l, x + 1.5, ly); ly += 2.6; }
+      });
+    });
+    if (lst.length > 4 && ly < yy + ch - 1) doc.text(`+${lst.length - 4} atividade(s)`, x + 1.5, ly);
+  }
+  doc.setFontSize(6); doc.setTextColor(100);
+  doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}${ME ? " por " + ME.unidade : ""}`, M, 206);
+  doc.save(`cronograma-${y}-${String(m + 1).padStart(2, "0")}${fil ? "-" + fil.toLowerCase().replace(/[^a-z0-9]+/g, "-") : ""}.pdf`);
+}
+
+// ---------- Inicialização ----------
+(() => {
+  const opts = (el, arr, todas) => {
+    el.innerHTML = (todas ? '<option value="">Todas as unidades</option>' : "") +
+      arr.map(x => `<option>${esc(x)}</option>`).join("");
+  };
+  opts($("lu"), C.UNIDADES.map(u => u.nome));
+  opts($("fund"), C.UNIDADES.map(u => u.nome));
+  opts($("lund"), C.UNIDADES.map(u => u.nome));
+  opts($("filtro"), C.UNIDADES.map(u => u.nome), true);
+  opts($("ftipo"), C.TIPOS);
+
+  if (C.SUPABASE_URL.includes("SEU-PROJETO")) {
+    aviso("Configuração pendente: preencha config.js com os dados do Supabase.");
+    render();
+    return;
+  }
+  iniciar().catch(e => aviso("Não foi possível conectar: " + msgErro(e)));
+})();
+
+</script>
+</body>
+</html>

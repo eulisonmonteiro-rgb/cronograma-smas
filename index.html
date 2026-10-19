@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1565c0">
+<title>Cronograma das Unidades – SMAS Oriximiná</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topo">
+  <div class="titulo">
+    <h1>Cronograma das Unidades</h1>
+    <div class="sub">SMAS Oriximiná · bloqueio de conflitos ativo</div>
+    <div class="aviso" id="aviso"></div>
+  </div>
+  <div class="acoes">
+    <span class="quem" id="quem"></span>
+    <select id="filtro" class="filtro" onchange="render()"></select>
+    <button class="p" id="bNova" onclick="abrirForm(null)" disabled>+ Atividade</button>
+    <button id="bMassa" onclick="$('dlgBulk').showModal()" disabled>Em massa</button>
+    <button id="bLogo" onclick="$('dlgLogo').showModal()" disabled>Logo</button>
+    <button onclick="pdf()">PDF do mês</button>
+    <button id="bBkp" onclick="abrirBackup()" hidden>Backup</button>
+    <button id="bAuth" onclick="ME ? sair() : $('dlgLogin').showModal()">Entrar</button>
+  </div>
+</header>
+
+<main class="grade">
+  <section class="card calendario">
+    <div class="nav">
+      <button onclick="mudar(-1)" aria-label="Mês anterior">‹</button>
+      <b id="mes"></b>
+      <button onclick="mudar(1)" aria-label="Próximo mês">›</button>
+    </div>
+    <div class="cal" id="cal"></div>
+  </section>
+
+  <section class="card dia">
+    <h2 id="tituloDia"></h2>
+    <div id="lista"></div>
+  </section>
+</main>
+
+<!-- Login -->
+<dialog id="dlgLogin">
+  <form onsubmit="event.preventDefault();entrar()" class="form">
+    <h2>Entrar na unidade</h2>
+    <label>Unidade<select id="lu"></select></label>
+    <label>Senha<input type="password" id="lp" autocomplete="current-password" required></label>
+    <p class="mut">A senha é fornecida pela SMAS.</p>
+    <div class="erro" id="lmsg"></div>
+    <div class="botoes">
+      <button type="button" onclick="$('dlgLogin').close()">Fechar</button>
+      <button class="p">Entrar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Atividade -->
+<dialog id="dlg">
+  <form onsubmit="salvarForm(event)" class="form">
+    <h2 id="tDlg">Atividade</h2>
+    <input type="hidden" id="fid">
+    <div class="linha">
+      <label>Data<input type="date" id="fdata" required></label>
+      <label>Unidade<select id="fund"></select></label>
+    </div>
+    <div class="linha">
+      <label>Início<input type="time" id="fini" required></label>
+      <label>Fim<input type="time" id="ffim" required></label>
+    </div>
+    <label>Título<input id="ftit" required maxlength="120"></label>
+    <div class="linha">
+      <label>Tipo<select id="ftipo"></select></label>
+      <label>Responsável<input id="fresp" required maxlength="80"></label>
+    </div>
+    <div class="erro" id="fmsg"></div>
+    <div class="botoes">
+      <button type="button" id="fdel" class="d" onclick="excluir()">Excluir</button>
+      <button type="button" onclick="$('dlg').close()">Cancelar</button>
+      <button class="p">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Em massa -->
+<dialog id="dlgBulk">
+  <div class="form">
+    <h2>Colar atividades em massa</h2>
+    <p class="mut">Uma atividade por linha, com campos separados por ponto e vírgula:<br>
+    <code>data;início;fim;unidade;responsável;título;tipo</code><br>
+    Ex.: 03/11/2026;09:00;11:00;CREAS;Maria Souza;Roda de conversa;Oficina</p>
+    <textarea id="bulk" placeholder="Cole aqui as linhas"></textarea>
+    <div id="blog" class="log"></div>
+    <div class="botoes">
+      <button onclick="$('dlgBulk').close()">Fechar</button>
+      <button class="p" id="bImp" onclick="importarMassa()">Importar</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Logo -->
+<dialog id="dlgLogo">
+  <div class="form">
+    <h2>Logo da unidade</h2>
+    <label>Unidade<select id="lund"></select></label>
+    <input type="file" id="lfile" accept="image/*">
+    <p class="mut">Máximo 150 KB. Cada unidade envia somente a própria logo.</p>
+    <div class="botoes">
+      <button class="d" onclick="removerLogo()">Remover</button>
+      <button onclick="$('dlgLogo').close()">Fechar</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Backup (somente SMAS) -->
+<dialog id="dlgBkp">
+  <div class="form">
+    <h2>Backup (somente SMAS)</h2>
+    <button class="p" onclick="baixarBackup()">Baixar backup</button>
+    <hr>
+    <p class="mut">Para restaurar, escolha um arquivo de backup. Isso substitui <b>todo</b> o cronograma.</p>
+    <input type="file" id="rfile" accept="application/json">
+    <div class="erro" id="rmsg"></div>
+    <div class="botoes">
+      <button class="d" onclick="restaurar()">Restaurar</button>
+      <button onclick="$('dlgBkp').close()">Fechar</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+:root {
+  --bg: #f5f7fa; --card: #ffffff; --tx: #1d2733; --mut: #6b7785;
+  --ac: #1565c0; --bd: #dde3ea; --err: #c62828; --ok: #2e7d32; --smas: #ef6c00;
+  --raio: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121820; --card: #1c2530; --tx: #e6ebf1; --mut: #97a3b1;
+    --ac: #64b5f6; --bd: #2d3945; --err: #ef9a9a; --ok: #81c784; --smas: #ffb74d;
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--tx);
+  padding: env(safe-area-inset-top, 0) max(12px, env(safe-area-inset-right)) 24px max(12px, env(safe-area-inset-left));
+  line-height: 1.35;
+}
+
+h1 { font-size: 1.15rem; margin: 0; }
+h2 { font-size: 1.05rem; margin: 0 0 8px; }
+.sub, .mut { color: var(--mut); font-size: .85rem; }
+.aviso { color: var(--err); font-size: .85rem; margin-top: 4px; }
+.erro { color: var(--err); font-size: .85rem; min-height: 1em; }
+.quem { color: var(--mut); font-size: .85rem; }
+
+/* ---------- Cabeçalho ---------- */
+.topo {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  justify-content: space-between; padding: 12px 0;
+}
+.acoes { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+/* ---------- Controles ---------- */
+button, select, input, textarea {
+  font: inherit; color: var(--tx); background: var(--card);
+  border: 1px solid var(--bd); border-radius: 8px; padding: 7px 11px;
+}
+button { cursor: pointer; min-height: 38px; }
+button:disabled { opacity: .5; cursor: default; }
+button.p { background: var(--ac); border-color: var(--ac); color: #fff; }
+button.d { color: var(--err); }
+input, select, textarea { width: 100%; }
+textarea { min-height: 140px; font-family: ui-monospace, monospace; font-size: .85rem; }
+.filtro { min-width: 160px; }
+
+/* ---------- Layout ---------- */
+.grade { display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px; }
+.card { background: var(--card); border: 1px solid var(--bd); border-radius: var(--raio); padding: 12px; }
+.nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+
+/* ---------- Calendário ---------- */
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal .h { text-align: center; font-size: .75rem; color: var(--mut); }
+.day {
+  min-height: 62px; border: 1px solid var(--bd); border-radius: 8px; padding: 4px;
+  cursor: pointer; font-size: .8rem; background: var(--card); overflow: hidden;
+}
+.day.s { background: color-mix(in srgb, var(--ac) 12%, var(--card)); }
+.day.t { outline: 2px solid var(--ac); }
+.dot { display: block; height: 6px; border-radius: 3px; margin-top: 3px; background: var(--ac); }
+.dot.smas { background: var(--smas); }
+
+/* ---------- Lista do dia ---------- */
+.item {
+  display: flex; gap: 8px; align-items: flex-start; cursor: pointer;
+  border: 1px solid var(--bd); border-left: 4px solid var(--ac);
+  border-radius: 8px; padding: 9px; margin: 6px 0; background: var(--card);
+}
+.item.smas { border-left-color: var(--smas); }
+.item img { width: 38px; height: 38px; object-fit: contain; border-radius: 6px; flex: none; }
+
+/* ---------- Diálogos ---------- */
+dialog {
+  border: none; border-radius: var(--raio); background: var(--card); color: var(--tx);
+  width: min(480px, 94vw); padding: 16px;
+}
+dialog::backdrop { background: rgba(0, 0, 0, .4); }
+#dlgBulk { width: min(640px, 94vw); }
+.form label { display: block; font-size: .85rem; color: var(--mut); margin: 8px 0 2px; }
+.form input, .form select { margin-top: 2px; }
+.linha { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.botoes { display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+.log { font-size: .85rem; max-height: 160px; overflow: auto; margin-top: 8px; }
+.ok { color: var(--ok); }
+.err { color: var(--err); }
+code { font-size: .8rem; }
+
+/* ---------- Celular e telas pequenas ---------- */
+@media (max-width: 800px) {
+  .grade { grid-template-columns: 1fr; }
+  .topo { flex-direction: column; align-items: stretch; }
+  .acoes { display: grid; grid-template-columns: 1fr 1fr; }
+  .acoes .quem { grid-column: 1 / -1; }
+  .acoes .filtro { grid-column: 1 / -1; min-width: 0; }
+  .acoes button, .acoes select { width: 100%; }
+  .day { min-height: 52px; font-size: .75rem; }
+  .cal { gap: 3px; }
+  .linha { grid-template-columns: 1fr; }
+  dialog { width: 94vw; max-height: 90vh; overflow: auto; }
+  input, select, textarea { font-size: 16px; }   /* evita zoom automático no iOS */
+}
